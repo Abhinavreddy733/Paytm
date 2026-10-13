@@ -21,20 +21,22 @@ model User {
   id                   Int            @id @default(autoincrement())
   username             String
   password             String
-  balance              Int    @default(0)
+  phoneNumber          Int?           @unique
+  balance              Int            @default(0)
+  accountPin           Int
   sentTransactions     Transactions[] @relation("SentTransactions")
   receivedTransactions Transactions[] @relation("ReceivedTransactions")
 }
 
 model Transactions {
-  id                Int                   @id @default(autoincrement())
-  senderId          Int
-  receiverId        Int
-  amount            Int
-  transactionStatus transactionStatusEnum
-  transactionTime   DateTime
-  sender            User                  @relation("SentTransactions", fields: [senderId], references: [id])
-  receiver          User                  @relation("ReceivedTransactions", fields: [receiverId], references: [id])
+  id                  Int                   @id @default(autoincrement())
+  senderPhoneNumber   Int
+  receiverPhoneNumber Int
+  amount              Int
+  transactionStatus   transactionStatusEnum
+  transactionTime     DateTime
+  sender              User                  @relation("SentTransactions", fields: [senderPhoneNumber], references: [phoneNumber])
+  receiver            User                  @relation("ReceivedTransactions", fields: [receiverPhoneNumber], references: [phoneNumber])
 }
 
 enum transactionStatusEnum {

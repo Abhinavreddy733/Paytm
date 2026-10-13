@@ -2,7 +2,7 @@ import express from 'express'
 import { jwtVerify } from 'jose'
 import type { Response, Request, NextFunction } from 'express'
 import { ResponseStatus,type ResponseStatusType } from './responseStatus'
-
+import { prisma } from "./db";
 const secret = new TextEncoder().encode("ABHINAV"!)
 
 export const AuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
@@ -17,9 +17,9 @@ export const AuthMiddleware = (req: Request, res: Response, next: NextFunction) 
         
         return next()
     }
-    const {username, password} = req.body;
+    const {username, password, accountPin, phoneNumber} = req.body;
 
-    if(!username || !password) {
+    if(!username || !password || !accountPin || !phoneNumber) {
         return sendResponse(res, ResponseStatus.BAD_REQUEST);
     }
     next();
@@ -39,6 +39,31 @@ export const userMiddleware = async (req: Request, res: Response, next: NextFunc
     } catch {
         return sendResponse(res, ResponseStatus.UNAUTHORIZED)
     }
+}
+
+export const verifyPinMiddleware = async(req: Request, res:Response, next: NextFunction) => {
+    //@ts-ignore
+    const userId = req.user.id;
+    const senderPhoneNumber = req.body.senderPhoneNumber;
+    const accountPin = req.body.accountPin
+
+    const userData = await prisma.user.findFirst({
+        where: {id : userId}
+    })
+
+    if(!userData) {
+        return sendResponse(res, ResponseStatus.NOT_FOUND)
+    }
+
+    if(userData?.phoneNumber != senderPhoneNumber) {
+        return sendResponse(res, ResponseStatus.UNAUTHORIZED)
+    }
+
+    if(accountPin != userData.accountPin) {
+        return sendResponse(res, ResponseStatus.BAD_REQUEST)
+    }
+
+    next();
 }
 
 export const sendResponse = (res: Response, rs: ResponseStatusType, data?: unknown) => {

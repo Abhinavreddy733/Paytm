@@ -13,6 +13,8 @@ const secret = new TextEncoder().encode("ABHINAV"!)
 const AuthSchema = z.object({
     username: z.string(),
     password: z.string().min(6),
+    accountPin: z.number(),
+    phoneNumber: z.number()
 })
 
 router.post('/signup', async (req, res) => {
@@ -24,10 +26,12 @@ router.post('/signup', async (req, res) => {
 
     const username = data.username;
     const password = await Bun.password.hash(data.password);
+    const accountPin = data.accountPin;
+    const phoneNumber = data.phoneNumber;
 
     return prisma.$transaction(async (tx) => {
         const user = await prisma.user.create({
-            data: { username, password }
+            data: { username, password, accountPin, phoneNumber }
         })
 
         if (!user) {
